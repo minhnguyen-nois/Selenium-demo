@@ -1,5 +1,11 @@
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.By;
+//import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -7,37 +13,43 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 
-public class loginSuccess {
+public class loginSuccess { ;
 
     @Test
     void testLoginSuccessfully() {
+        // Tắt log cảnh báo - PHẢI NẰM TRONG METHOD
+        System.setProperty("webdriver.chrome.silentOutput", "true");
+        Logger.getLogger("org.openqa.selenium").setLevel(Level.OFF);
+
         WebDriver driver = new ChromeDriver();
-        // Tăng thời gian chờ lên 15 giây để đảm bảo trang load kịp
+        // Increase the waiting time to 15s to handle slower loading times
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
 
         try {
             driver.manage().window().maximize();
             driver.get("https://dev.agentiqai.ai/auth/sign-in");
 
-            // Nhập Email - sử dụng wait để đợi ô nhập hiện ra
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("email"))).sendKeys("minhnguyen@gmail.com");
+            // Input Email - use wait to wait for the element to be visible
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("email"))).sendKeys("minhnguyen@agentiqai.ai");
 
-            // Nhập Password
+            // Input Password
             driver.findElement(By.name("password")).sendKeys("minhnguyen");
 
-            // Click nút Sign In
-            driver.findElement(By.xpath("//button[@type='submit']")).click();
+            // Click button Sign In
+            WebElement signInButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[text()='Sign In']")));
+            signInButton.click();
 
-            // XÁC MINH: Đợi cho đến khi URL thay đổi sang dashboard
-            wait.until(ExpectedConditions.urlContains("/dashboard"));
+            // Verify login success by checking the presence of an element on the dashboard
+            WebDriverWait loginWait = new WebDriverWait(driver, Duration.ofSeconds(20));
+            loginWait.until(ExpectedConditions.urlContains("/dashboard"));
 
-            // Kiểm tra xem URL hiện tại có đúng là chứa dashboard không
+            // 2. Assert (Xác nhận) kết quả
             String currentUrl = driver.getCurrentUrl();
-            org.junit.jupiter.api.Assertions.assertTrue(currentUrl.contains("dashboard"),
-                    "Đăng nhập không thành công, URL hiện tại là: " + currentUrl);
+            Assertions.assertTrue(currentUrl.contains("dashboard"),
+                    "Đăng nhập thất bại! URL hiện tại là: " + currentUrl);
 
         } finally {
-            // Luôn đóng trình duyệt để không bị tốn RAM
+            // always close the browser
             driver.quit();
         }
     }
